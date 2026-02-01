@@ -1,44 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>BrickPass Online Store</title>
-  <script src="ticket.js"></script>
-  <script src="qr.js"></script>
+<meta charset="UTF-8">
+<title>City Metro | BrickPass</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- QR -->
+<script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
 </head>
+
 <body>
+<h1>City Metro</h1>
+<h3>Create BrickPass</h3>
 
-<h1>My BrickPass Card</h1>
+<form id="form">
+  Name: <input id="name" required><br><br>
+  Singles: <input id="singles" type="number" value="1" min="0"><br>
+  Day Passes: <input id="day" type="number" value="0" min="0"><br>
+  Week Passes: <input id="week" type="number" value="0" min="0"><br><br>
+  <button>Create Ticket</button>
+</form>
 
-<button onclick="init()">Create New BrickPass</button>
-<button onclick="addPass('single')">Add Single</button>
-<button onclick="addPass('day')">Add Day</button>
-<button onclick="addPass('week')">Add Week</button>
-
-<h3 id="info"></h3>
-<div id="qr"></div>
+<div id="result" hidden>
+  <h2>BrickPass Created ✅</h2>
+  <canvas id="qr"></canvas>
+  <p>Ticket ID: <span id="ticketId"></span></p>
+</div>
 
 <script>
-function init() {
-  let ticket = getTicket();
-  if (!ticket) ticket = createTicket();
-  updateUI();
-}
+/* 🔥 FIREBASE CONFIG — CHANGE THIS ONLY */
+const firebaseConfig = {
+  apiKey: "AIzaSyANne8sRMI_iG_8DMh1-SzQef4UbdBzBZ0",
+  authDomain: "city-metro-brickpass.firebaseapp.com",
+  projectId: "city-metro-brickpass",
+  storageBucket: "city-metro-brickpass.firebasestorage.app",
+  messagingSenderId: "88566855284",
+  appId: "1:88566855284:web:a28ed3c18708da927d0321"
+};
 
-function updateUI() {
-  const ticket = getTicket();
-  if (!ticket) return;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  document.getElementById("info").innerText =
-    `ID: ${ticket.id}
-Singles: ${ticket.passes.single}
-Days: ${ticket.passes.day}
-Weeks: ${ticket.passes.week}`;
+/* CREATE TICKET */
+document.getElementById("form").onsubmit = async e => {
+  e.preventDefault();
 
-  generateQR(ticket.id);
-}
+  const id = "CM-" + Math.floor(Math.random() * 1000000);
 
-init();
+  await db.collection("tickets").doc(id).set({
+    name: name.value,
+    singles: +singles.value,
+    dayPasses: +day.value,
+    weekPasses: +week.value,
+    activePass: null,
+    activatedAt: null
+  });
+
+  new QRious({
+    element: document.getElementById("qr"),
+    value: id,
+    size: 220
+  });
+
+  ticketId.textContent = id;
+  form.hidden = true;
+  result.hidden = false;
+};
 </script>
-
 </body>
 </html>
