@@ -1,15 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Validator</title>
-  <script src="ticket.js"></script>
-  <script src="scanner.js"></script>
+<title>City Metro | Validator</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body>
+<h1>BrickPass Validator</h1>
+<div id="reader" style="width:300px;"></div>
+<h2 id="status">Waiting for scan…</h2>
 
-<h1>Validator</h1>
-<div id="reader"></div>
-<h3 id="result">Scan ticket</h3>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyANne8sRMI_iG_8DMh1-SzQef4UbdBzBZ0",
+  authDomain: "city-metro-brickpass.firebaseapp.com",
+  projectId: "city-metro-brickpass",
+  storageBucket: "city-metro-brickpass.firebasestorage.app",
+  messagingSenderId: "88566855284",
+  appId: "1:88566855284:web:a28ed3c18708da927d0321"
+};
 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const scanner = new Html5Qrcode("reader");
+
+scanner.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  async ticketId => {
+    const ref = db.collection("tickets").doc(ticketId);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      status.textContent = "❌ INVALID TICKET";
+      status.style.color = "red";
+      return;
+    }
+
+    const t = snap.data();
+
+    if (t.activePass) {
+      status.textContent = "✅ ALREADY ACTIVE (" + t.activePass + ")";
+      status.style.color = "green";
+      return;
+    }
+
+    let pass = null;
+    if (t.singles > 0) pass = "single";
+    else if (t.dayPasses > 0) pass = "day";
+    else if (t.weekPasses > 0) pass = "week";
+
+    if (!pass) {
+      status.textContent = "❌ NO PASSES LEFT";
+      status.style.color = "red";
+      return;
+    }
+
+    await ref.update({
+      activePass: pass,
+      activatedAt: Date.now(),
+      singles: pass === "single" ? t.singles - 1 : t.singles,
+      dayPasses: pass === "day" ? t.dayPasses - 1 : t.dayPasses,
+      weekPasses: pass === "week" ? t.weekPasses - 1 : t.weekPasses
+    });
+
+    status.textContent = "✅ ACTIVATED: " + pass.toUpperCase();
+    status.style.color = "green";
+  }
+);
+</script>
 </body>
 </html>
