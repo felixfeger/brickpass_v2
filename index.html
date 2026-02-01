@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BrickPass Online Store</title>
+  <script src="ticket.js"></script>
+  <script src="qr.js"></script>
+</head>
+<body>
+
+<h1>My BrickPass Card</h1>
+
+<button onclick="init()">Create New BrickPass</button>
+<button onclick="addPass('single')">Add Single</button>
+<button onclick="addPass('day')">Add Day</button>
+<button onclick="addPass('week')">Add Week</button>
+
+<h3 id="info"></h3>
+<div id="qr"></div>
+
+<script>
+function init() {
+  let ticket = getTicket();
+  if (!ticket) ticket = createTicket();
+  updateUI();
+}
+
+function updateUI() {
+  const ticket = getTicket();
+  if (!ticket) return;
+
+  document.getElementById("info").innerText =
+    `ID: ${ticket.id}
+Singles: ${ticket.passes.single}
+Days: ${ticket.passes.day}
+Weeks: ${ticket.passes.week}`;
+
+  generateQR(ticket.id);
+}
+
+init();
+</script>
+
+</body>
+</html>
