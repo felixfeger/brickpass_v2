@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>City Metro | Recharge</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+<h2>Recharge BrickPass</h2>
+
+Ticket ID:<br>
+<input id="id"><br><br>
+
+Add Singles:<br>
+<input id="s" type="number" value="0"><br>
+Add Day Passes:<br>
+<input id="d" type="number" value="0"><br>
+Add Week Passes:<br>
+<input id="w" type="number" value="0"><br><br>
+
+<button onclick="recharge()">Recharge</button>
+
+<p id="msg"></p>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyANne8sRMI_iG_8DMh1-SzQef4UbdBzBZ0",
+  authDomain: "city-metro-brickpass.firebaseapp.com",
+  projectId: "city-metro-brickpass",
+  storageBucket: "city-metro-brickpass.firebasestorage.app",
+  messagingSenderId: "88566855284",
+  appId: "1:88566855284:web:a28ed3c18708da927d0321"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function recharge() {
+  const ref = db.collection("tickets").doc(id.value);
+  const snap = await ref.get();
+
+  if (!snap.exists) {
+    msg.textContent = "❌ Invalid Ticket";
+    return;
+  }
+
+  const t = snap.data();
+
+  await ref.update({
+    singles: t.singles + (+s.value || 0),
+    dayPasses: t.dayPasses + (+d.value || 0),
+    weekPasses: t.weekPasses + (+w.value || 0)
+  });
+
+  msg.textContent = "✅ Recharged Successfully";
+}
+</script>
+</body>
+</html>
